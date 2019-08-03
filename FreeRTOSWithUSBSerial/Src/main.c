@@ -132,7 +132,7 @@ int main(void)
   MX_TIM12_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|DSI_RESET_Pin|LD_USER2_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -1167,12 +1167,17 @@ void StartDefaultTask(void const * argument)
                  
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
-
+  osDelay(1000);
+  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|LD_USER2_Pin, GPIO_PIN_RESET);
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
+  int count = 0;
   for(;;)
   {
-    osDelay(1);
+	  count++;
+
+	  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, (count & 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	  osDelay(1000);
   }
   /* USER CODE END 5 */ 
 }
