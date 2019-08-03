@@ -89,7 +89,20 @@ void CommTask(void const * argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define RXBUFFERSIZE 10
+uint8_t aRxBuffer[RXBUFFERSIZE];
+int got_it = 0;
 
+/**
+ * To be called with the received is full buffer
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart->Instance == USART1)
+	{
+		got_it = 1;
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -133,6 +146,8 @@ int main(void)
   MX_TIM12_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);
+  //HAL_UART_RegisterCallback();
   HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|DSI_RESET_Pin|LD_USER2_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
@@ -772,7 +787,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-
+  __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);
   /* USER CODE END USART1_Init 2 */
 
 }
@@ -1156,7 +1171,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-#define RXBUFFERSIZE 256
 /**
   * @brief  Function implementing the defaultTask thread.
   * @param  argument: Not used
@@ -1165,17 +1179,37 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void CommTask(void const * argument)
 {
-	  uint8_t aRxBuffer[RXBUFFERSIZE];
 	  static uint8_t bufftr[] = "0123456789\n\r";
+	  static uint8_t new_line[] = "\n\r";
 
 	  int count = 0;
+
+	  HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
+
 	  /* Infinite loop */
+
 	  for(;;)
 	  {
 		  //osThreadYield();
 		  count++;
-		  HAL_UART_Transmit(&huart1, bufftr, (sizeof(bufftr)-1), 100);
+
 		  // not working HAL_UART_Transmit_IT(&huart1, bufftr, (sizeof(bufftr)-1));
+		  if (got_it) {
+			  got_it = 0;
+			  HAL_UART_Transmit(&huart1, aRxBuffer, (RXBUFFERSIZE-1), 100);
+			  HAL_UART_Transmit(&huart1, new_line, 2, 100);
+			  // as per https://community.st.com/s/question/0D50X00009XkgrbSAB/best-way-to-use-hal-uart-receiver-it-function
+			  __HAL_UART_FLUSH_DRREGISTER(&huart1);
+			  __HAL_UART_SEND_REQ(&huart1, UART_RXDATA_FLUSH_REQUEST);
+			  __HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_OREF);
+
+			  HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
+
+		  }
+		  else
+		  {
+			  HAL_UART_Transmit(&huart1, bufftr, (sizeof(bufftr)-1), 100);
+		  }
 		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
 		  osDelay(500);
 		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
