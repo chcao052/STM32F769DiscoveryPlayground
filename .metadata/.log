@@ -1,0 +1,51 @@
+!SESSION 2019-08-03 14:09:29.756 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_202
+java.vendor=AdoptOpenJdk
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_AU
+Command-line arguments:  -os win32 -ws win32 -arch x86_64 -data D:\chcao\STM32F769DiscoveryPlayground
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2019-08-03 14:09:46.844
+!MESSAGE Log4j initialized with config file D:\chcao\STM32F769DiscoveryPlayground\.metadata\.log4j.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2019-08-03 14:09:49.726
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY com.st.stm32cube.ide.mcu.toolchain 4 4 2019-08-03 14:10:59.003
+!MESSAGE Type or version is empty: ; 
+
+!ENTRY com.st.stm32cube.ide.mcu.toolchain 2 2 2019-08-03 14:10:59.007
+!MESSAGE Falling back to default toolchain
+
+!ENTRY com.st.stm32cube.ide.mcu.toolchain 4 4 2019-08-03 14:10:59.011
+!MESSAGE Type or version is empty: ; 
+
+!ENTRY com.st.stm32cube.ide.mcu.toolchain 2 2 2019-08-03 14:10:59.014
+!MESSAGE Falling back to default toolchain
+
+!ENTRY com.st.stm32cube.ide.mcu.toolchain 4 4 2019-08-03 14:10:59.017
+!MESSAGE Type or version is empty: ; 
+
+!ENTRY com.st.stm32cube.ide.mcu.toolchain 2 2 2019-08-03 14:10:59.021
+!MESSAGE Falling back to default toolchain
+
+!ENTRY com.st.stm32cube.ide.mcu.toolchain 4 4 2019-08-03 14:10:59.024
+!MESSAGE Type or version is empty: ; 
+
+!ENTRY com.st.stm32cube.ide.mcu.toolchain 2 2 2019-08-03 14:10:59.027
+!MESSAGE Falling back to default toolchain
+
+!ENTRY org.eclipse.cdt.core 1 0 2019-08-03 14:11:04.032
+!MESSAGE Indexed 'Project4' (50 sources, 141 headers) in 3.32 sec: 15,102 declarations; 91,779 references; 2 unresolved inclusions; 30 syntax errors; 145 unresolved names (0.14%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2019-08-03 14:12:05.041
+!MESSAGE Indexed 'Project4' (50 sources, 141 headers) in 2.02 sec: 15,102 declarations; 91,779 references; 2 unresolved inclusions; 30 syntax errors; 145 unresolved names (0.14%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2019-08-03 14:12:36.976
+!MESSAGE Indexed 'FreeRTOSWithSerialUSB' (0 sources, 0 headers) in 0.005 sec: 0 declarations; 0 references; 0 unresolved inclusions; 0 syntax errors; 0 unresolved names (0%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2019-08-03 14:18:01.333
+!MESSAGE Indexed 'FreeRTOSWithUSBSerial' (0 sources, 0 headers) in 0 sec: 0 declarations; 0 references; 0 unresolved inclusions; 0 syntax errors; 0 unresolved names (0%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2019-08-03 14:18:02.681
+!MESSAGE Indexed 'FreeRTOSWithUSBSerial' (0 sources, 0 headers) in 0 sec: 0 declarations; 0 references; 0 unresolved inclusions; 0 syntax errors; 0 unresolved names (0%)
