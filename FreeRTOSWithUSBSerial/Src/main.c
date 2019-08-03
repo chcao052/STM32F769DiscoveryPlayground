@@ -62,6 +62,7 @@ TIM_HandleTypeDef htim12;
 UART_HandleTypeDef huart1;
 
 osThreadId defaultTaskHandle;
+osThreadId commTaskHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -83,7 +84,7 @@ static void MX_USART1_UART_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-
+void CommTask(void const * argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -153,8 +154,13 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 4096);
+
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 1, 256);
+  osThreadDef(commTask, CommTask, osPriorityBelowNormal, 1, 256);
+
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+  commTaskHandle = osThreadCreate(osThread(commTask), NULL);
+
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -1150,7 +1156,30 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+#define RXBUFFERSIZE 256
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void CommTask(void const * argument)
+{
+	  uint8_t aRxBuffer[RXBUFFERSIZE];
+	  static uint8_t bufftr[] = "0123456789\n\r";
 
+	  int count = 0;
+	  /* Infinite loop */
+	  for(;;)
+	  {
+		  //osThreadYield();
+		  HAL_UART_Transmit(&huart1, bufftr, (sizeof(bufftr)-1), 100);
+		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
+		  osDelay(500);
+		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
+		  osDelay(1000);
+	  }
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -1162,13 +1191,10 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
-    
-    
-                 
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
-  osDelay(1000);
-  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|LD_USER2_Pin, GPIO_PIN_RESET);
+  osDelay(500);
+  //HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|LD_USER2_Pin, GPIO_PIN_RESET);
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   int count = 0;
@@ -1177,7 +1203,7 @@ void StartDefaultTask(void const * argument)
 	  count++;
 
 	  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, (count & 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-	  osDelay(1000);
+	  osDelay(500);
   }
   /* USER CODE END 5 */ 
 }
