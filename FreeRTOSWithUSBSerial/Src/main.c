@@ -794,7 +794,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(DSI_RESET_GPIO_Port, DSI_RESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|DSI_RESET_Pin|LD_USER2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : SAI1_FSA_Pin SAI1_SDB_Pin SAI1_SCKA_Pin SAI1_SDA_Pin */
   GPIO_InitStruct.Pin = SAI1_FSA_Pin|SAI1_SDB_Pin|SAI1_SCKA_Pin|SAI1_SDA_Pin;
@@ -890,10 +890,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD_USER1_Pin Audio_INT_Pin WIFI_RST_Pin ARD_D8_Pin 
-                           LD_USER2_Pin ARD_D7_Pin ARD_D4_Pin ARD_D2_Pin */
-  GPIO_InitStruct.Pin = LD_USER1_Pin|Audio_INT_Pin|WIFI_RST_Pin|ARD_D8_Pin 
-                          |LD_USER2_Pin|ARD_D7_Pin|ARD_D4_Pin|ARD_D2_Pin;
+  /*Configure GPIO pins : LD_USER1_Pin DSI_RESET_Pin LD_USER2_Pin */
+  GPIO_InitStruct.Pin = LD_USER1_Pin|DSI_RESET_Pin|LD_USER2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOJ, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Audio_INT_Pin WIFI_RST_Pin ARD_D8_Pin ARD_D7_Pin 
+                           ARD_D4_Pin ARD_D2_Pin */
+  GPIO_InitStruct.Pin = Audio_INT_Pin|WIFI_RST_Pin|ARD_D8_Pin|ARD_D7_Pin 
+                          |ARD_D4_Pin|ARD_D2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOJ, &GPIO_InitStruct);
@@ -1007,13 +1014,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : DSI_RESET_Pin */
-  GPIO_InitStruct.Pin = DSI_RESET_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(DSI_RESET_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : WIFI_TX_Pin */
   GPIO_InitStruct.Pin = WIFI_TX_Pin;
