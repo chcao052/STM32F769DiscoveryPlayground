@@ -1173,7 +1173,9 @@ void CommTask(void const * argument)
 	  for(;;)
 	  {
 		  //osThreadYield();
+		  count++;
 		  HAL_UART_Transmit(&huart1, bufftr, (sizeof(bufftr)-1), 100);
+		  // not working HAL_UART_Transmit_IT(&huart1, bufftr, (sizeof(bufftr)-1));
 		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
 		  osDelay(500);
 		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
