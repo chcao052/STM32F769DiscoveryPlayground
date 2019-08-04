@@ -95,6 +95,24 @@ int got_it = 0;
 
 /**
  * To be called with the received is full buffer
+ * @todo: https://community.st.com/s/question/0D50X00009XkgrbSAB/best-way-to-use-hal-uart-receiver-it-function
+ *   Recently I am using STM32L051xx, and I also need UART.
+ *   I also think the HAL Uart code is somewhat foolish
+ *   (Or maybe it would be impossible to write a function to fulfill the whole world,
+ *   because different application needs different ways to handle the received buffer).
+ *   Finally what I did is:
+1. Use CubeMX to generate the code.
+2. Keep the initialization code for UART.
+3. Modify code to use my own function for starting Rx and UART IRQ handler,
+where I could handle my buffer freely. Of course, I could refer to the
+provided HAL code on how to access UART registers.
+Actually you have to add ''USART1_IRQHandler'' in your code to use interrupt mode.
+In this function, call you own IRQ handler,
+rather than ''HAL_UART_IRQHandler(...)'', which is provided by HAL.
+
+VERY good point!!!
+https://stackoverflow.com/questions/37336527/why-does-uart-transmit-interrupt-fail-to-work-in-this-case?noredirect=1&lq=1
+https://community.st.com/s/question/0D50X00009XkfrWSAR/cubemx-uart-receive-complete-interrupt
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {

@@ -3368,9 +3368,17 @@ static void UART_RxISR_8BIT(UART_HandleTypeDef *huart)
   if (huart->RxState == HAL_UART_STATE_BUSY_RX)
   {
     uhdata = (uint16_t) READ_REG(huart->Instance->RDR);
+
     *huart->pRxBuffPtr = (uint8_t)(uhdata & (uint8_t)uhMask);
     huart->pRxBuffPtr++;
     huart->RxXferCount--;
+
+    //testing
+    uhdata = uhdata & (uint8_t)uhMask;
+    if (uhdata == '\n' || uhdata =="\r")
+    {
+    	UART_EndTransmit_IT(huart);
+    }
 
     if (huart->RxXferCount == 0U)
     {
