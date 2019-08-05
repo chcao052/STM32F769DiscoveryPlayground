@@ -1208,7 +1208,7 @@ void StartDefaultTask(void const * argument)
   HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_RESET);
 
   {
-	  char *name = "hello world\n";
+	  char *name = "hello world\r\n";
 	  for (int i=0; i < strlen(name); i++)
 		  term_put_char(&term1, name[i], 0);
   }
