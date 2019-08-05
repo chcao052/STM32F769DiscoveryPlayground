@@ -62,9 +62,8 @@ TIM_HandleTypeDef htim12;
 UART_HandleTypeDef huart1;
 
 osThreadId defaultTaskHandle;
-osThreadId commTaskHandle;
 /* USER CODE BEGIN PV */
-
+osThreadId commTaskHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,7 +121,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}
 }
 /* USER CODE END 0 */
-
 
 /**
   * @brief  The application entry point.
@@ -189,16 +187,13 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 1, 256);
-  osThreadDef(commTask, CommTask, osPriorityBelowNormal, 1, 256);
-
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 256);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-  commTaskHandle = osThreadCreate(osThread(commTask), NULL);
-
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  osThreadDef(commTask, CommTask, osPriorityBelowNormal, 1, 256);
+  commTaskHandle = osThreadCreate(osThread(commTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -1247,10 +1242,12 @@ void CommTask(void const * argument)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
+    
+    
+                 
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
-  osDelay(500);
-  //HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|LD_USER2_Pin, GPIO_PIN_RESET);
+
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   int count = 0;
