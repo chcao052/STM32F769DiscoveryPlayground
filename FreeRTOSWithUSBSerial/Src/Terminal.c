@@ -9,7 +9,7 @@
  */
 
 #include "main.h"
-
+#include <task.h>
 
 Terminal_t term1;
 
@@ -48,82 +48,61 @@ term_put_char(Terminal_t *term, signed char out_char, TickType_t block_time)
 	return pdPASS;
 }
 
-static void read_one_byte(Terminal_t *term)
+static void rx_one_byte(Terminal_t *term)
 {
 	UART_HandleTypeDef *huart = term->huart;
 	volatile unsigned char ucByte;
-	uint16_t uhMask = huart->Mask;
 	uint16_t uhdata;
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
 
 	/* Check that a Rx process is ongoing */
-	if (huart->RxState == HAL_UART_STATE_BUSY_RX)
+	uhdata = (uint16_t) READ_REG(huart->Instance->RDR);
+	ucByte = (uint8_t) (uhdata & 0xff);
+
+	/*
+	 * Post the character onto the queue of received characters - noting
+	 * whether or not this wakes a task.
+	 */
+	if (xQueueSendFromISR(term->rx_queue, (void * )&ucByte, &xHigherPriorityTaskWoken) != pdTRUE)
 	{
-		uhdata = (uint16_t) READ_REG(huart->Instance->RDR);
-		ucByte = (uint8_t) (uhdata & (uint8_t) uhMask);
-
-		/*
-		 * Post the character onto the queue of received characters - noting
-		 * whether or not this wakes a task.
-		 */
-		if (xQueueSendFromISR(term->tx_queue, (void * )&ucByte, &xHigherPriorityTaskWoken) != pdTRUE)
-		{
-			/* Disable the UART Parity Error Interrupt and RXNE interrupts */
-			CLEAR_BIT(huart->Instance->CR1, (USART_CR1_RXNEIE | USART_CR1_PEIE));
-
-			/* Disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-			CLEAR_BIT(huart->Instance->CR3, USART_CR3_EIE);
-
-			/* Rx process is completed, restore huart->RxState to Ready */
-			huart->RxState = HAL_UART_STATE_READY;
-		}
-		else
-		{
-			if (xHigherPriorityTaskWoken)
-			{
-				//taskYIELD_YIELD_FROM_ISR();
-			}
-		}
-	}	//busy
-	else
-	{
-		/* Clear RXNE interrupt flag */
+		//Clear RXNE interrupt flag - need ?
+		//todo error handling
 		__HAL_UART_SEND_REQ(huart, UART_RXDATA_FLUSH_REQUEST);
+	}
+
+	if (xHigherPriorityTaskWoken)
+	{
+		taskYIELD (); //http://www.freertos.org/a00120.html
 	}
 }
 
-static void write_one_byte(Terminal_t *term)
+static void tx_one_byte(Terminal_t *term)
 {
 	UART_HandleTypeDef *huart = term->huart;
 	volatile unsigned char ucByte;
 
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
-	if (huart->gState == HAL_UART_STATE_BUSY_TX)
+	if (xQueueReceiveFromISR(term->tx_queue, (void *)&ucByte, &xHigherPriorityTaskWoken) == pdTRUE)
 	{
-		if (xQueueReceiveFromISR(term->tx_queue, (void *)&ucByte, &xHigherPriorityTaskWoken) == pdTRUE)
-		{
-			huart->Instance->TDR = (uint8_t)(ucByte & (uint8_t)0xFF);
-		}
-		else
-		{
-			/* Disable the UART Transmit Data Register Empty Interrupt */
-			CLEAR_BIT(huart->Instance->CR1, USART_CR1_TXEIE);
-
-			/* Enable the UART Transmit Complete Interrupt */
-			SET_BIT(huart->Instance->CR1, USART_CR1_TCIE);
-		}
+		huart->Instance->TDR = (uint8_t)ucByte;
 	}
+
+	if (xHigherPriorityTaskWoken)
+	{
+		taskYIELD (); //http://www.freertos.org/a00120.html
+	}
+
 }
 
 
 /**
- * Interrupt service routine  - copy mostly from HAL layer
+ * Interrupt service routine  - copy HAL_UART_IRQHandler()
  */
 void term_ISR(Terminal_t *term)
 {
-	UART_HandleTypeDef *huart = term->huart;
+  UART_HandleTypeDef *huart = term->huart;
   uint32_t isrflags   = READ_REG(huart->Instance->ISR);
   uint32_t cr1its     = READ_REG(huart->Instance->CR1);
   uint32_t cr3its     = READ_REG(huart->Instance->CR3);
@@ -139,7 +118,7 @@ void term_ISR(Terminal_t *term)
     if (((isrflags & USART_ISR_RXNE) != 0U)
         && ((cr1its & USART_CR1_RXNEIE) != 0U))
     {
-      read_one_byte(term);
+      rx_one_byte(term);
       return;
     }
   }
@@ -190,7 +169,7 @@ void term_ISR(Terminal_t *term)
       if (((isrflags & USART_ISR_RXNE) != 0U)
           && ((cr1its & USART_CR1_RXNEIE) != 0U))
       {
-        read_one_byte(term);
+    	  rx_one_byte(term);
       }
 
       /* If Overrun error occurs, or if any error occurs in DMA mode reception,
@@ -202,8 +181,7 @@ void term_ISR(Terminal_t *term)
         /* Blocking error : transfer is aborted
            Set the UART state ready to be able to start again the process,
            Disable Rx Interrupts, and disable Rx DMA request, if ongoing */
-        //UART_EndRxTransfer(huart);
-
+        //todo UART_EndRxTransfer(huart);
       }
       else
       {
@@ -220,7 +198,7 @@ void term_ISR(Terminal_t *term)
   if (((isrflags & USART_ISR_TXE) != 0U)
       && ((cr1its & USART_CR1_TXEIE) != 0U))
   {
-    write_one_byte(term);
+    tx_one_byte(term);
     return;
   }
 

@@ -1171,7 +1171,7 @@ void CommTask(void const * argument)
 		  count++;
 		  for (i = 0; i < 24; i++)
 		  {
-			  if (term_put_char(&term1, 'a' + i, 0))
+			  if (term_put_char(&term1, 'a', 0))
 			  {
 				  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
 				  osDelay(500);
@@ -1195,21 +1195,26 @@ void CommTask(void const * argument)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
-    
-    
-                 
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   int count = 0;
+  signed char input = 0;
+  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_RESET);
   for(;;)
   {
-	  count++;
-
-	  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, (count & 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-	  osDelay(500);
+	  if (term_get_char(&term1, &input, portMAX_DELAY))
+	  {
+		  printf("%c %02x\n", input, input);
+		  count++;
+		  if (count & 1)
+			  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_SET);
+		  else
+			  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_RESET);
+		  osDelay(100);
+	  }
   }
   /* USER CODE END 5 */ 
 }
