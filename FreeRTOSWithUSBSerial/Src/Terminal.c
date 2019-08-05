@@ -19,6 +19,9 @@ term_initialise(Terminal_t *term, UART_HandleTypeDef *huart)
 	term->rx_queue = xQueueCreate(TERMINAL_QUEUE_LENGTH, (unsigned portBASE_TYPE)sizeof(signed char));
 	term->tx_queue = xQueueCreate(TERMINAL_QUEUE_LENGTH, (unsigned portBASE_TYPE)sizeof(signed char));
 	term->huart = huart;
+	SET_BIT(term->huart->Instance->CR1, USART_CR1_TXEIE); // enable transmission
+	//SET_BIT(term->huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE); // enable transmission
+	//SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
 }
 
 portBASE_TYPE
@@ -44,6 +47,7 @@ term_put_char(Terminal_t *term, signed char out_char, TickType_t block_time)
 
 	//@todo
 	// Turn on the Tx interrupt so the ISR will remove the character from the queue and send it.
+	SET_BIT(term->huart->Instance->CR1, USART_CR1_TXEIE);
 
 	return pdPASS;
 }
@@ -87,6 +91,14 @@ static void tx_one_byte(Terminal_t *term)
 	if (xQueueReceiveFromISR(term->tx_queue, (void *)&ucByte, &xHigherPriorityTaskWoken) == pdTRUE)
 	{
 		huart->Instance->TDR = (uint8_t)ucByte;
+	}
+	else
+	{
+		/* Disable the UART Transmit Data Register Empty Interrupt */
+		CLEAR_BIT(huart->Instance->CR1, USART_CR1_TXEIE);
+
+		// DON'T do this: hung! Enable the UART Transmit Complete Interrupt
+		//SET_BIT(huart->Instance->CR1, USART_CR1_TCIE);
 	}
 
 	if (xHigherPriorityTaskWoken)

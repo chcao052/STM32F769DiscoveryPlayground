@@ -1163,25 +1163,30 @@ static void MX_GPIO_Init(void)
 void CommTask(void const * argument)
 {
 	  int count = 0;
-	  int i;
 	  /* Infinite loop */
 
 	  for(;;)
 	  {
 		  count++;
-		  for (i = 0; i < 24; i++)
+#if 0
+		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
+		  osDelay(100);
+		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
+		  osDelay(500);
+#else
+		  for (int i = 0; i < 24; i++)
 		  {
-			  if (term_put_char(&term1, 'a', 0))
+			  if (term_put_char(&term1, 'a' + i, 0))
 			  {
 				  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
-				  osDelay(500);
+				  osDelay(100);
 				  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
-				  osDelay(1000);
+				  osDelay(500);
 			  }
 		  }
 		  term_put_char(&term1, '\n', 0);
 		  term_put_char(&term1, '\r', 0);
-
+#endif
 	  }
 }
 /* USER CODE END 4 */
@@ -1207,7 +1212,7 @@ void StartDefaultTask(void const * argument)
   {
 	  if (term_get_char(&term1, &input, portMAX_DELAY))
 	  {
-		  printf("%c %02x\n", input, input);
+		  term_put_char(&term1, input, 0);//todo check error
 		  count++;
 		  if (count & 1)
 			  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_SET);
