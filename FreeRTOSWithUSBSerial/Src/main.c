@@ -88,38 +88,7 @@ void CommTask(void const * argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define RXBUFFERSIZE 10
-uint8_t aRxBuffer[RXBUFFERSIZE];
-int got_it = 0;
 
-/**
- * To be called with the received is full buffer
- * @todo: https://community.st.com/s/question/0D50X00009XkgrbSAB/best-way-to-use-hal-uart-receiver-it-function
- *   Recently I am using STM32L051xx, and I also need UART.
- *   I also think the HAL Uart code is somewhat foolish
- *   (Or maybe it would be impossible to write a function to fulfill the whole world,
- *   because different application needs different ways to handle the received buffer).
- *   Finally what I did is:
-1. Use CubeMX to generate the code.
-2. Keep the initialization code for UART.
-3. Modify code to use my own function for starting Rx and UART IRQ handler,
-where I could handle my buffer freely. Of course, I could refer to the
-provided HAL code on how to access UART registers.
-Actually you have to add ''USART1_IRQHandler'' in your code to use interrupt mode.
-In this function, call you own IRQ handler,
-rather than ''HAL_UART_IRQHandler(...)'', which is provided by HAL.
-
-VERY good point!!!
-https://stackoverflow.com/questions/37336527/why-does-uart-transmit-interrupt-fail-to-work-in-this-case?noredirect=1&lq=1
-https://community.st.com/s/question/0D50X00009XkfrWSAR/cubemx-uart-receive-complete-interrupt
- */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if (huart->Instance == USART1)
-	{
-		got_it = 1;
-	}
-}
 /* USER CODE END 0 */
 
 /**
@@ -163,10 +132,9 @@ int main(void)
   MX_TIM12_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);
   //HAL_UART_RegisterCallback();
+  term_initialise(&term1, &huart1);
   HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|DSI_RESET_Pin|LD_USER2_Pin, GPIO_PIN_SET);
-  terminal.intialise(&huart1);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -1194,41 +1162,26 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void CommTask(void const * argument)
 {
-	  static uint8_t bufftr[] = "0123456789\n\r";
-	  static uint8_t new_line[] = "\n\r";
-
 	  int count = 0;
-
-	  HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
-
+	  int i;
 	  /* Infinite loop */
 
 	  for(;;)
 	  {
-		  //osThreadYield();
 		  count++;
-
-		  // not working HAL_UART_Transmit_IT(&huart1, bufftr, (sizeof(bufftr)-1));
-		  if (got_it) {
-			  got_it = 0;
-			  HAL_UART_Transmit(&huart1, aRxBuffer, (RXBUFFERSIZE-1), 100);
-			  HAL_UART_Transmit(&huart1, new_line, 2, 100);
-			  // as per https://community.st.com/s/question/0D50X00009XkgrbSAB/best-way-to-use-hal-uart-receiver-it-function
-			  __HAL_UART_FLUSH_DRREGISTER(&huart1);
-			  __HAL_UART_SEND_REQ(&huart1, UART_RXDATA_FLUSH_REQUEST);
-			  __HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_OREF);
-
-			  HAL_UART_Receive_IT(&huart1, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
-
-		  }
-		  else
+		  for (i = 0; i < 24; i++)
 		  {
-			  HAL_UART_Transmit(&huart1, bufftr, (sizeof(bufftr)-1), 100);
+			  if (term_put_char(&term1, 'a' + i, 0))
+			  {
+				  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
+				  osDelay(500);
+				  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
+				  osDelay(1000);
+			  }
 		  }
-		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
-		  osDelay(500);
-		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
-		  osDelay(1000);
+		  term_put_char(&term1, '\n', 0);
+		  term_put_char(&term1, '\r', 0);
+
 	  }
 }
 /* USER CODE END 4 */

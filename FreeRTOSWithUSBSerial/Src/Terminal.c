@@ -1,25 +1,28 @@
 /*
  * Terminal.cpp
+ *  https://community.st.com/s/question/0D50X00009XkgrbSAB/best-way-to-use-hal-uart-receiver-it-function
+ *	https://stackoverflow.com/questions/37336527/why-does-uart-transmit-interrupt-fail-to-work-in-this-case?noredirect=1&lq=1
+ *	https://community.st.com/s/question/0D50X00009XkfrWSAR/cubemx-uart-receive-complete-interrupt
  *
  *  Created on: 4 Aug 2019
  *      Author: chcao
  */
 
-#include "Terminal.h"
-#include "stm32f7xx_hal.h"
+#include "main.h"
+
 
 Terminal_t term1;
 
 void
 term_initialise(Terminal_t *term, UART_HandleTypeDef *huart)
 {
-	term->rx_queue = xQueueCreate( TERMINAL_QUEUE_LENGTH, ( unsigned portBASE_TYPE ) sizeof( signed char ) );
-	term->tx_queue = xQueueCreate( TERMINAL_QUEUE_LENGTH, ( unsigned portBASE_TYPE ) sizeof( signed char ) );
+	term->rx_queue = xQueueCreate(TERMINAL_QUEUE_LENGTH, (unsigned portBASE_TYPE)sizeof(signed char));
+	term->tx_queue = xQueueCreate(TERMINAL_QUEUE_LENGTH, (unsigned portBASE_TYPE)sizeof(signed char));
 	term->huart = huart;
 }
 
 portBASE_TYPE
-term_pt_char(Terminal_t *term, signed char *ret_char, TickType_t block_time)
+term_get_char(Terminal_t *term, signed char *ret_char, TickType_t block_time)
 {
 	if (xQueueReceive(term->rx_queue, ret_char, block_time))
 	{
@@ -113,6 +116,7 @@ static void write_one_byte(Terminal_t *term)
 		}
 	}
 }
+
 
 /**
  * Interrupt service routine  - copy mostly from HAL layer
