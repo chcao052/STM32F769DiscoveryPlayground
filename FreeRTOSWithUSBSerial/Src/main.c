@@ -1168,10 +1168,7 @@ void CommTask(void const * argument)
 	  for(;;)
 	  {
 		  count++;
-#if 0
-		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
-		  osDelay(100);
-		  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
+#if 1
 		  osDelay(500);
 #else
 		  for (int i = 0; i < 24; i++)
@@ -1207,18 +1204,30 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   int count = 0;
   signed char input = 0;
+
   HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_RESET);
+
+  {
+	  char *name = "hello world\n";
+	  for (int i=0; i < strlen(name); i++)
+		  term_put_char(&term1, name[i], 0);
+  }
+
   for(;;)
   {
 	  if (term_get_char(&term1, &input, portMAX_DELAY))
 	  {
-		  term_put_char(&term1, input, 0);//todo check error
+		  // line feed and return
+		  if (input == '\r')
+			  term_put_char(&term1, '\n', 10);
+
+		  term_put_char(&term1, input, 10);//todo check error
 		  count++;
 		  if (count & 1)
 			  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_SET);
 		  else
 			  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_RESET);
-		  osDelay(100);
+		  //osDelay(100);
 	  }
   }
   /* USER CODE END 5 */ 

@@ -20,7 +20,8 @@ term_initialise(Terminal_t *term, UART_HandleTypeDef *huart)
 	term->tx_queue = xQueueCreate(TERMINAL_QUEUE_LENGTH, (unsigned portBASE_TYPE)sizeof(signed char));
 	term->huart = huart;
 	SET_BIT(term->huart->Instance->CR1, USART_CR1_TXEIE); // enable transmission
-	//SET_BIT(term->huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE); // enable transmission
+	//need??
+	//SET_BIT(term->huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
 	//SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
 }
 
