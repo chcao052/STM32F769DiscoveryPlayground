@@ -1200,6 +1200,7 @@ void StartDefaultTask(void const * argument)
 			  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_RESET);
 		  //osDelay(100);
 	  }
+	  taskYIELD(); //http://www.freertos.org/a00120.html
   }
   /* USER CODE END 5 */ 
 }

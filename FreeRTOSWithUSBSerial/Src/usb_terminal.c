@@ -50,19 +50,19 @@ void USBCommTask(void const * argument)
 
 	  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
 	  osDelay(2000);
-	  CDC_Transmit_HS((uint8_t*)&message, (uint16_t)strlen(message));
+	  CDC_Transmit_HS((uint8_t*)message, (uint16_t)strlen(message));
 	  osDelay(100);
 	  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
 	  for(;;) 	  /* Infinite loop */
 	  {
 		  count++;
-		  //if (xQueueReceive(&usb_rx_queue, &input, portMAX_DELAY))
-		  CDC_Transmit_HS((uint8_t*)&message, (uint16_t)strlen(message));
-		  osDelay(2000);
-		  if (0)
+
+		  //CDC_Transmit_HS((uint8_t*)message, (uint16_t)strlen(message));
+		  //osDelay(2000);
+		  if (xQueueReceive(usb_rx_queue, &input, portMAX_DELAY))
 		  {
 			  if (input == '\r')
-				  CDC_Transmit_HS((uint8_t*)&ret, (uint16_t)2);
+				  CDC_Transmit_HS((uint8_t*)ret, (uint16_t)2);
 			  else
 				  CDC_Transmit_HS((uint8_t*)&input, (uint16_t)1);
 			  count++;
@@ -71,7 +71,9 @@ void USBCommTask(void const * argument)
 			  else
 				  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
 
-		  }	  }
+		  }
+		  taskYIELD();
+	  }
 }
 
 
