@@ -25,7 +25,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usbd_cdc_if.h"
 #include "Terminal.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -83,7 +85,6 @@ static void MX_USART1_UART_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-void CommTask(void const * argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -133,7 +134,8 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   //HAL_UART_RegisterCallback();
-  term_initialise(&term1, &huart1);
+  term_initialise(&uart_terminal, &huart1);
+  usb_terminal_intialise(); //no uart
   HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin|DSI_RESET_Pin|LD_USER2_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
@@ -160,8 +162,8 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  osThreadDef(commTask, CommTask, osPriorityBelowNormal, 1, 256);
-  commTaskHandle = osThreadCreate(osThread(commTask), NULL);
+  osThreadDef(usbCommTask, USBCommTask, osPriorityBelowNormal, 1, 256);
+  commTaskHandle = osThreadCreate(osThread(usbCommTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -1154,38 +1156,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
-void CommTask(void const * argument)
-{
-	  int count = 0;
-	  /* Infinite loop */
 
-	  for(;;)
-	  {
-		  count++;
-#if 1
-		  osDelay(500);
-#else
-		  for (int i = 0; i < 24; i++)
-		  {
-			  if (term_put_char(&term1, 'a' + i, 0))
-			  {
-				  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_SET);
-				  osDelay(100);
-				  HAL_GPIO_WritePin(GPIOJ, LD_USER1_Pin, GPIO_PIN_RESET);
-				  osDelay(500);
-			  }
-		  }
-		  term_put_char(&term1, '\n', 0);
-		  term_put_char(&term1, '\r', 0);
-#endif
-	  }
-}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -1208,20 +1179,20 @@ void StartDefaultTask(void const * argument)
   HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_RESET);
 
   {
-	  char *name = "hello world\n";
+	  char *name = "Hello world\r\n";
 	  for (int i=0; i < strlen(name); i++)
-		  term_put_char(&term1, name[i], 0);
+		  term_put_char(&uart_terminal, name[i], 0);
   }
 
   for(;;)
   {
-	  if (term_get_char(&term1, &input, portMAX_DELAY))
+	  if (term_get_char(&uart_terminal, &input, portMAX_DELAY))
 	  {
 		  // line feed and return
 		  if (input == '\r')
-			  term_put_char(&term1, '\n', 10);
+			  term_put_char(&uart_terminal, '\n', 10);
 
-		  term_put_char(&term1, input, 10);//todo check error
+		  term_put_char(&uart_terminal, input, 10);//todo check error
 		  count++;
 		  if (count & 1)
 			  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_SET);
@@ -1229,6 +1200,7 @@ void StartDefaultTask(void const * argument)
 			  HAL_GPIO_WritePin(GPIOJ, LD_USER2_Pin, GPIO_PIN_RESET);
 		  //osDelay(100);
 	  }
+	  taskYIELD(); //http://www.freertos.org/a00120.html
   }
   /* USER CODE END 5 */ 
 }
