@@ -11,7 +11,7 @@
 #include "main.h"
 #include <task.h>
 
-Terminal_t term1;
+Terminal_t uart_terminal;
 
 void
 term_initialise(Terminal_t *term, UART_HandleTypeDef *huart)
@@ -104,7 +104,7 @@ static void tx_one_byte(Terminal_t *term)
 
 	if (xHigherPriorityTaskWoken)
 	{
-		taskYIELD (); //http://www.freertos.org/a00120.html
+		taskYIELD(); //http://www.freertos.org/a00120.html
 	}
 
 }
@@ -113,7 +113,7 @@ static void tx_one_byte(Terminal_t *term)
 /**
  * Interrupt service routine  - copy HAL_UART_IRQHandler()
  */
-void term_ISR(Terminal_t *term)
+void term_UART_ISR(Terminal_t *term)
 {
   UART_HandleTypeDef *huart = term->huart;
   uint32_t isrflags   = READ_REG(huart->Instance->ISR);
